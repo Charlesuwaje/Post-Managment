@@ -11,9 +11,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 class PostController extends Controller
 {
     use AuthorizesRequests;
-    public function __construct(public readonly PostService $postService)
-    {
-    }
+    public function __construct(public readonly PostService $postService) {}
 
     // public function index()
     // {
@@ -38,8 +36,6 @@ class PostController extends Controller
             'title' => 'required|string|max:255',
             'content' => 'required|string',
         ]);
-
-        $this->authorize('create', Post::class);
         $response = $this->postService->createPost($validated, auth()->id());
 
         return response()->json([
@@ -48,8 +44,6 @@ class PostController extends Controller
             'data' => $response['data'],
         ], Response::HTTP_CREATED);
     }
-
-
 
     public function show($id)
     {
@@ -70,10 +64,27 @@ class PostController extends Controller
     }
 
 
+    // public function update(Request $request, $id)
+    // {
+    //     $this->authorize('update', Post::class);
+
+    //     $response = $this->postService->updatePost($id, $request->all(), auth()->id());
+
+    //     if (!$response['status']) {
+    //         return response()->json([
+    //             'status' => false,
+    //             'message' => $response['message'],
+    //         ], Response::HTTP_BAD_REQUEST);
+    //     }
+
+    //     return response()->json([
+    //         'status' => true,
+    //         'message' => $response['message'],
+    //         'data' => $response['data'],
+    //     ], Response::HTTP_OK);
+    // }
     public function update(Request $request, $id)
     {
-        $this->authorize('update', Post::class);
-
         $response = $this->postService->updatePost($id, $request->all(), auth()->id());
 
         if (!$response['status']) {
@@ -91,9 +102,9 @@ class PostController extends Controller
     }
 
 
+
     public function destroy($id)
     {
-        $this->authorize('delete', Post::class);
 
         $response = $this->postService->deletePost($id, auth()->id());
 

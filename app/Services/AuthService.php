@@ -3,10 +3,13 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Mail\ForgetpasswordMail;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Mail;
 // use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Password;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class AuthService
@@ -53,26 +56,47 @@ class AuthService
 
         return response()->json(['message' => 'Logged out successfully'], 200);
     }
-
-    public function forgotPassword($data)
+    public function generateOtp(string $email, string $fullName): void
     {
-        $status = Password::sendResetLink(['email' => $data['email']]);
+        $otp = rand(100000, 999999);
 
-        return $status === Password::RESET_LINK_SENT
-            ? response()->json(['message' => 'Reset link sent to your email'], 200)
-            : response()->json(['message' => 'Unable to send reset link'], 400);
-    }
-
-    public function resetPassword($data)
-    {
-        $status = Password::reset(
-            $data,
-            function ($user, $password) {
-                $user->password = Hash::make($password);
-                $user->save();
-            }
+        DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $email],
+            ['token' => $otp, 'created_at' => now()]
         );
 
-        return $status;
+        Mail::to($email)->send(new ForgetpasswordMail($otp, $fullName));
+    }
+    public function verifyOtp(string $otp)
+    {
+        $passwordReset = DB::table('password_reset_tokens')
+            ->where('token', $otp)
+            ->first();
+
+        if ($passwordReset) {
+            $createdAt = \Carbon\Carbon::parse($passwordReset->created_at);
+            if ($createdAt->addMinutes(5)->isPast()) {
+                return false;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+    public function resetPassword(string $email, string $password)
+    {
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
+            return null;
+        }
+
+        $user->password = Hash::make($password);
+        $user->save();
+
+        DB::table('password_reset_tokens')->where('email', $email)->delete();
+
+        return $user;
     }
 }

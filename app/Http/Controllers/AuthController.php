@@ -7,6 +7,7 @@ use App\Services\AuthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Tymon\JWTAuth\Exceptions\TokenInvalidException;
@@ -44,34 +45,6 @@ class AuthController extends Controller
         return $this->authService->logout();
     }
 
-    public function forgotPassword(Request $request)
-    {
-        $validated = $request->validate([
-            'email' => 'required|string|email|exists:users,email',
-        ]);
-
-        return $this->authService->forgotPassword($validated);
-    }
-    public function resetPassword(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'token' => 'required',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
-        $data = $request->only('email', 'token', 'password', 'password_confirmation');
-        $status = $this->authService->resetPassword($data);
-
-        if ($status === Password::PASSWORD_RESET) {
-            return response()->json(['message' => 'Password has been reset successfully'], 200);
-        }
-
-        throw ValidationException::withMessages([
-            'email' => [trans($status)],
-        ]);
-    }
-
     public function refreshToken()
     {
         try {
@@ -86,5 +59,68 @@ class AuthController extends Controller
         } catch (JWTException $e) {
             return response()->json(['message' => 'Token not provided'], 400);
         }
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+        // dd($user);
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
+        $this->authService->generateOtp($request->email, $user->name);
+
+        return response()->json(['message' => 'OTP code sent to your email'], 200);
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'otp' => 'required|numeric|digits:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $isOtpValid = $this->authService->verifyOtp($request->otp);
+
+        if ($isOtpValid) {
+            return response()->json(['message' => 'OTP code verified successfully'], 200);
+        }
+
+        return response()->json(['message' => 'Invalid or expired OTP code'], 400);
+    }
+
+    public function passwordReset(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'password' => 'required|string|min:8|confirmed',
+            'email' => 'required|email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $user = $this->authService->resetPassword($request->email, $request->password);
+
+        if (!$user) {
+            return response()->json(['message' => 'This user is not found'], 404);
+        }
+
+        return response()->json([
+            'message' => 'Password reset successful',
+            'data' => $user,
+        ]);
     }
 }

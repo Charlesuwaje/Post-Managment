@@ -19,27 +19,25 @@ use App\Http\Controllers\RoleController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-Route::post('/password/reset', [AuthController::class, 'resetPassword']);
+Route::post('/forget-password', [AuthController::class, 'forgotPassword'])->name('forgot.Password');
+Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
+Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->name('verify.otp');
+Route::post('/passwordReset', [AuthController::class, 'passwordReset']);
 Route::post('/auth/refresh', [AuthController::class, 'refreshToken']);
 
 
-Route::middleware(['jwt.auth','log.activity'])->group(function () {
+Route::middleware(['jwt.auth', 'log.activity'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    // Route::apiResource('posts', PostController::class);
     Route::get('/posts', [PostController::class, 'index']);
     Route::post('/posts', [PostController::class, 'store']);
     Route::get('/posts/{id}', [PostController::class, 'show']);
     Route::put('/posts/{id}', [PostController::class, 'update']);
     Route::delete('/posts/{postId}', [PostController::class, 'destroy']);
-    // Route::post('/auth/refresh', [AuthController::class, 'refreshToken']);
-
     Route::prefix('role')->group(function () {
         Route::get('/', [RoleController::class, 'index']);
         Route::post('/create', [RoleController::class, 'store']);
         Route::get('/role/{id}', [RoleController::class, 'show']);
         Route::put('/role/{id}', [RoleController::class, 'update']);
         Route::delete('/role/{id}', [RoleController::class, 'destroy']);
-
     });
 });

@@ -124,6 +124,13 @@ class PostService
                 'data' => null,
             ];
         }
+        if ($post->user_id !== $userId) {
+            return [
+                'status' => false,
+                'message' => 'Unauthorized to delete this post.',
+                'data' => null,
+            ];
+        }
 
         // ActivityLog::create([
         //     'user_id' => $userId,
