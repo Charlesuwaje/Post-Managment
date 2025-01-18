@@ -32,7 +32,7 @@ class ActivityLogService
 
     public function getUserActivities(User $user, int $perPage = 10): LengthAwarePaginator
     {
-        return $user->activities() 
+        return $user->activities()
             ->latest()
             ->paginate($perPage);
     }

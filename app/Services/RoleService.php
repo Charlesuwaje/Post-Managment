@@ -34,18 +34,19 @@ class RoleService
 
         app(ActivityLogService::class)->logActivity(
             $userId,
-           $role->id,
+            $role->id,
             ActionEnum::CREATE->value,
-           $role->toArray(), 
-            MessageEnum::POST_CREATED->value 
+            $role->toArray(),
+            MessageEnum::ROLE_CREATED->value
         );
 
         return [
             'status' => true,
-            'message' => 'Post created successfully.',
+            'message' => 'Role created successfully.',
             'data' => $role,
         ];
     }
+
 
 
 
@@ -96,8 +97,8 @@ class RoleService
             $userId,
             $role->id,
             ActionEnum::UPDATE->value,
-            $role->toArray(), 
-            MessageEnum::POST_UPDATED->value 
+            $role->toArray(),
+            MessageEnum::ROLE_UPDATED->value
         );
 
         return [
@@ -109,9 +110,9 @@ class RoleService
 
     public function deleteRole($roleId, $userId)
     {
-        $role= Post::find($roleId);
+        $role = Post::find($roleId);
 
-        if (!$role){
+        if (!$role) {
             return [
                 'status' => false,
                 'message' => 'Post not found.',
@@ -122,8 +123,8 @@ class RoleService
             $userId,
             $role->id,
             ActionEnum::DELETE->value,
-            $role->toArray(), 
-            MessageEnum::POST_DELETED->value 
+            $role->toArray(),
+            MessageEnum::ROLE_DELETED->value
         );
 
         $role->delete();

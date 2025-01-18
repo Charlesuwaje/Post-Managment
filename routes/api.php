@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -39,5 +40,9 @@ Route::middleware(['jwt.auth', 'log.activity'])->group(function () {
         Route::get('/role/{id}', [RoleController::class, 'show']);
         Route::put('/role/{id}', [RoleController::class, 'update']);
         Route::delete('/role/{id}', [RoleController::class, 'destroy']);
+    });
+    Route::prefix('activity')->group(function () {
+        Route::get('/', [ActivityLogController::class, 'Activities']);
+        Route::get('/activity/{user}', [ActivityLogController::class, 'getUserActivities']);
     });
 });

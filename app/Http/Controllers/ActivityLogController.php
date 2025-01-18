@@ -11,31 +11,26 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ActivityLogController extends Controller
 {
-    public function __construct(public readonly ActivityLogService $activityLogService)
-    {
-    }
+    public function __construct(public readonly ActivityLogService $activityLogService) {}
+
 
     public function getUserActivities(Request $request, User $user): JsonResponse
     {
         $perPage = $request->get('perPage', 10);
 
-        $activities = $this->activityLogService->getUserActivities($user, $perPage);
+        $activities = $this->activityLogService->getUserActivities($user, (int) $perPage);
 
-        return $this->success(
-            // $activities->toArray(),
-            $activities,
-            Response::HTTP_OK
-        );
+        return response()->json([
+            'success' => true,
+            'data' => $activities,
+        ], Response::HTTP_OK);
     }
 
-    /**
-     * Get all activities.
-     *
-     * @return JsonResponse
-     */
-    public function adminActivities(Request $request): JsonResponse
+
+    public function Activities(Request $request): JsonResponse
     {
-        $result = $this->activityLogService->getAllActivities($request->perPage);
+        $result = $this->activityLogService->getAllActivities((int) $request->perPage);
+        // dd($result);
 
         if (!$result['success']) {
             return $this->error(
@@ -43,10 +38,8 @@ class ActivityLogController extends Controller
                 Response::HTTP_SERVICE_UNAVAILABLE
             );
         }
-
-        return $this->success(
+        return response()->json([
             $result['activities'],
-            Response::HTTP_OK
-        );
+        ], Response::HTTP_OK);
     }
 }

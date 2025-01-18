@@ -9,9 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RoleController extends Controller
 {
-    public function __construct(public readonly RoleService $roleService)
-    {
-    }
+    public function __construct(public readonly RoleService $roleService) {}
 
     public function index()
     {
